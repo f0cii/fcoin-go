@@ -1,21 +1,26 @@
 package fcoin
 
 import (
+	"context"
 	"github.com/gorilla/websocket"
+	"net"
 	"net/http"
 	"net/url"
 	"time"
 )
 
 func (c *Client) InitWS() error {
+	var dialContext func(ctx context.Context, network, addr string) (net.Conn, error)
 	var proxy func(*http.Request) (*url.URL, error)
 	if c.client.Transport != nil {
 		tr, ok := c.client.Transport.(*http.Transport)
 		if ok {
+			dialContext = tr.DialContext
 			proxy = tr.Proxy
 		}
 	}
 	dialer := websocket.Dialer{
+		NetDialContext:   dialContext,
 		Proxy:            proxy,
 		HandshakeTimeout: 45 * time.Second,
 	}
